@@ -1,28 +1,56 @@
 package main
 
 import (
+	"bufio"
 	"bytes"
 	"crypto/rand"
 	"flag"
-	"io/ioutil"
+	"fmt"
+	"log"
+	"math/big"
+	"os"
 
 	"github.com/btcsuite/btcutil/base58"
 )
 
 func main() {
 	size := flag.Int("size", 10, "number of keys to generate")
-	output := flag.String("output", "keys.csv", "output file")
-	len := flag.Int("len", 16, "key length")
+	klen := flag.Int("len", 16, "key length")
+	wl := flag.String("wordList", "", "word list to use instead of random bytes")
 	flag.Parse()
 
 	keys := bytes.Buffer{}
-	for i := 0; i < *size; i++ {
-		keys.WriteString(base58.Encode(RandomBytes(*len)))
-		keys.WriteString("\n")
+
+	if *wl != "" {
+		file, err := os.Open(*wl)
+		if err != nil {
+			log.Fatal(err)
+		}
+		defer file.Close()
+		scanner := bufio.NewScanner(file)
+		scanner.Split(bufio.ScanLines)
+		list := []string{}
+		for scanner.Scan() {
+			list = append(list, scanner.Text())
+		}
+
+		for i := 0; i < *size; i++ {
+			for j := 0; j < *klen; j++ {
+				keys.WriteString(list[RandomInt(0, len(list)-1)])
+				if j != *klen-1 {
+					keys.WriteString(",")
+				}
+			}
+			keys.WriteString("\n")
+		}
+	} else {
+
+		for i := 0; i < *size; i++ {
+			keys.WriteString(base58.Encode(RandomBytes(*klen)))
+			keys.WriteString("\n")
+		}
 	}
-	if err := ioutil.WriteFile(*output, keys.Bytes(), 0o600); err != nil {
-		panic(err)
-	}
+	fmt.Println(keys.String())
 }
 
 func RandomBytes(n int) []byte {
@@ -32,4 +60,12 @@ func RandomBytes(n int) []byte {
 		panic(err)
 	}
 	return b
+}
+
+func RandomInt(min, max int) int {
+	num, err := rand.Int(rand.Reader, big.NewInt(int64(max-min)))
+	if err != nil {
+		panic(err)
+	}
+	return int(num.Int64()) + min
 }

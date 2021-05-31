@@ -7,11 +7,11 @@ Dummy go program for generating a batch of random keys in base58 format
 Usage of ./b58keygen:
   -len int
         key length (default 16)
-  -output string
-        output file (default "keys.csv")
   -size int
         number of keys to generate (default 10)
+  -wordList string
+        word list to use instead of random bytes
 
-
-./b58keygen -len=12 -size=2500 -output=keys.csv
+./b58keygen -len=12 -size=2500 > keys.txt
+./b58keygen -len=6 -size=500 -wordList=wordlists/catala > mnemonics.cat.csv
 ```
