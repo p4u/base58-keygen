@@ -13,5 +13,5 @@ Usage of ./b58keygen:
         word list to use instead of random bytes
 
 ./b58keygen -len=12 -size=2500 > keys.txt
-./b58keygen -len=6 -size=500 -wordList=wordlists/catala > mnemonics.cat.csv
+./b58keygen -len=6 -size=500 -wordList=wordlists/catala.txt > mnemonics.cat.csv
 ```
