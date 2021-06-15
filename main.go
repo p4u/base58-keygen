@@ -46,7 +46,7 @@ func main() {
 	} else {
 
 		for i := 0; i < *size; i++ {
-			keys.WriteString(base58.Encode(RandomBytes(*klen)))
+			keys.WriteString(base58.Encode(RandomBytes(*klen))[:*klen])
 			keys.WriteString("\n")
 		}
 	}
