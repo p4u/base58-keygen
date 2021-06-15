@@ -41,13 +41,17 @@ func main() {
 					keys.WriteString(",")
 				}
 			}
-			keys.WriteString("\n")
+			if i < (*size - 1) {
+				keys.WriteString("\n")
+			}
 		}
 	} else {
 
 		for i := 0; i < *size; i++ {
 			keys.WriteString(base58.Encode(RandomBytes(*klen))[:*klen])
-			keys.WriteString("\n")
+			if i < (*size - 1) {
+				keys.WriteString("\n")
+			}
 		}
 	}
 	fmt.Println(keys.String())
