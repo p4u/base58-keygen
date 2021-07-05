@@ -5,6 +5,7 @@ import (
 	"flag"
 	"io/ioutil"
 	"os"
+	"sync/atomic"
 	"time"
 
 	"github.com/btcsuite/btcutil/base58"
@@ -17,6 +18,8 @@ import (
 func main() {
 	cfile := flag.String("census", "", "census file")
 	size := flag.Int("size", 10, "key size")
+	threads := flag.Int("threads", 4, "number of cpu threads")
+
 	flag.Parse()
 	log.Init("debug", "stdout")
 	stdir, err := ioutil.TempDir("", "")
@@ -44,23 +47,39 @@ func main() {
 
 	log.Infof("starting bruteforce attack")
 	var i int64
-	timer := time.Now()
-	for {
 
-		mp, err := tree.GenProof(
-			ethereum.HashRaw([]byte(base58.Encode(util.RandomBytes(*size)))),
-			nil)
-		if err != nil {
-			log.Fatal(err)
+	brutf := func() {
+		j := 0
+		for {
+
+			mp, err := tree.GenProof(
+				ethereum.HashRaw([]byte(base58.Encode(util.RandomBytes(*size)))),
+				nil)
+			if err != nil {
+				log.Fatal(err)
+			}
+			if mp != nil {
+				log.Infof("colision found!!! on %d", i)
+			}
+			if j%10000 == 0 {
+				atomic.AddInt64(&i, 10000)
+			}
+			j++
 		}
-		if mp != nil {
-			log.Infof("colision found!!! on %d", i)
-		}
-		if i%10000 == 0 {
-			time.Since(timer).Seconds()
-			log.Infof("key %d at %.2f keys/second", i, 10000/time.Since(timer).Seconds())
-			timer = time.Now()
-		}
-		i++
+	}
+
+	for i := 0; i < *threads; i++ {
+		log.Infof("starting thread %d", i)
+		go brutf()
+	}
+
+	timer := time.Now()
+	var last int64
+	for {
+		time.Sleep(10 * time.Second)
+		now := atomic.LoadInt64(&i)
+		log.Infof("%.2f keys/second", float64(now-last)/time.Since(timer).Seconds())
+		timer = time.Now()
+		last = now
 	}
 }
